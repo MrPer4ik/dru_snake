@@ -31,8 +31,8 @@ class World(object):
         self.size = size
         self.world = np.zeros(size)
         # Fill in the indexes gaps to add walls to the grid world
-        self.world[[0, size[0]], :] = self.WALL
-        self.world[:, [0, size[1]]] = self.WALL
+        self.world[[0, size[0] - 1], :] = self.WALL
+        self.world[:, [0, size[1] - 1]] = self.WALL
         # Get available positions for placing food (choose all positions where world block = 0)
         self.available_food_positions = set(zip(*np.where(self.world == 0)))
         # Init snake
@@ -46,7 +46,7 @@ class World(object):
         """
         if not self.custom:
             # choose a random position between [SNAKE_SIZE and SIZE - SNAKE_SIZE]
-            start_position = SNAKE_SIZE + np.random.randint(self.size - 2*SNAKE_SIZE, size=2)
+            start_position = tuple(SNAKE_SIZE + np.random.randint(np.array(self.size) - 2*SNAKE_SIZE, size=2))
             # choose a random direction index
             start_direction_index = np.random.randint(len(DIRECTIONS))
             new_snake = Snake(start_position, start_direction_index, SNAKE_SIZE)
@@ -60,7 +60,7 @@ class World(object):
         """
         snake = self.snake if self.snake.alive else None
         # Update available positions for food placement considering snake location
-        available_food_positions = self.available_food_positions - set(snake.blocks)
+        available_food_positions = self.available_food_positions - set(list(snake.blocks))
         if not self.custom:
             # Choose a random position from available
             chosen_position = list(self.available_food_positions)[np.random.randint(len(self.available_food_positions))]
@@ -107,16 +107,16 @@ class World(object):
             if new_snake_head not in self.available_food_positions:
                 self.snake.alive = False
             # Check if snake eats itself
-            elif new_snake_head in self.snake.blocks:
+            elif new_snake_head in list(self.snake.blocks)[1:]:
                 self.snake.alive = False
             #  Check if snake eats the food
             if new_snake_head == self.food_position:
                 # Remove old food
-                self.world[chosen_position[0], chosen_position[1]] = 0
+                self.world[self.food_position[0], self.food_position[1]] = 0
                 # Add tail again
                 for d in DIRECTIONS:
-                    if self.snake.blocks[-1] + d == self.snake.blocks[-2]:
-                        self.snake.blocks.append(self.snake.blocks[-1] - d)
+                    if all(np.array(self.snake.blocks[-1]) + d == np.array(self.snake.blocks[-2])):
+                        self.snake.blocks.append(tuple(self.snake.blocks[-1] - d))
                         break
                 # Request to place new food
                 new_food_needed = True

@@ -35,7 +35,7 @@ class Snake:
         tail = self.blocks[-1]
         self.blocks = self.blocks[:-1]
         # Check new head
-        new_head = self.blocks[0] + DIRECTIONS[self.current_direction_index]
+        new_head = tuple(self.blocks[0] + DIRECTIONS[self.current_direction_index])
         # Add new head
         self.blocks = [new_head] + self.blocks
         return new_head, tail
